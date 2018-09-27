@@ -84,10 +84,11 @@ with tf.Session() as sess:
     end = timer()
     training_time += end - start
 
-    nat_dict = {model.x_input: x_batch,
+    nat_dict = {model.x_input: np.concatenate((x_batch,np.copy(x_batch)),axis=0),
                 model.y_input: y_batch}
 
-    adv_dict = {model.x_input: x_batch_adv,
+    x_mix_batch = np.concatenate((x_batch,x_batch_adv),axis=0)
+    adv_dict = {model.x_input: x_mix_batch,
                 model.y_input: y_batch}
 
     # Output to stdout
