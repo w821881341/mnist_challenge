@@ -83,7 +83,7 @@ with tf.Session() as sess:
     x_batch_adv = attack.perturb(x_batch, y_batch, sess)
     end = timer()
     training_time += end - start
-
+    y_batch = np.concatenate((y_batch,np.copy(y_batch)),axis=0)
     nat_dict = {model.x_input: np.concatenate((x_batch,np.copy(x_batch)),axis=0),
                 model.y_input: y_batch}
 
