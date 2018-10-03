@@ -63,7 +63,7 @@ class LinfPGDAttack:
     """Given a set of examples (x_nat, y), returns a set of adversarial
        examples within epsilon of x_nat in l_infinity norm."""
 
-    random_mark = np.random.choice(2, size=batch_size, p=[0.5, 0.5])
+    random_mark = np.random.choice(2, size=(batch_size,1), p=[0.5, 0.5])
 
     if self.rand:
       x = x_nat + random_mark*np.random.uniform(-self.epsilon, self.epsilon, x_nat.shape)
