@@ -59,6 +59,28 @@ class LinfPGDAttack:
     return x
 
 
+  def random_perturb(self, x_nat, y, batch_size, sess):
+    """Given a set of examples (x_nat, y), returns a set of adversarial
+       examples within epsilon of x_nat in l_infinity norm."""
+
+    random_mark = np.random.choice(2, size=batch_size, p=[0.5, 0.5])
+
+    if self.rand:
+      x = x_nat + random_mark*np.random.uniform(-self.epsilon, self.epsilon, x_nat.shape)
+    else:
+      x = np.copy(x_nat)
+
+    for i in range(self.k):
+      grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
+                                            self.model.y_input: y})
+
+      x += random_mark*(self.a * np.sign(grad))
+
+      x = np.clip(x, x_nat - self.epsilon, x_nat + self.epsilon)
+      x = np.clip(x, 0, 1)  # ensure valid pixel range
+
+    return x
+
 if __name__ == '__main__':
   import json
   import sys

@@ -68,11 +68,14 @@ merged_summaries = tf.summary.merge_all()
 
 shutil.copy('config.json', model_dir)
 
+train_size = mnist.train.num_examples
+
 with tf.Session() as sess:
   # Initialize the summary writer, global variables, and our time counter.
   summary_writer = tf.summary.FileWriter(model_dir, sess.graph)
   sess.run(tf.global_variables_initializer())
   training_time = 0.0
+
 
   # Main training loop
   for ii in range(max_num_training_steps):
@@ -80,7 +83,7 @@ with tf.Session() as sess:
 
     # Compute Adversarial Perturbations
     start = timer()
-    x_batch_adv = attack.perturb(x_batch, y_batch, sess)
+    x_batch_adv = attack.random_perturb(x_batch, y_batch,batch_size, sess)
     end = timer()
     training_time += end - start
 
