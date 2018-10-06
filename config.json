@@ -22,5 +22,6 @@
   "random_start": true,
   "loss_func": "xent",
   "store_adv_path": "attack.npy",
-  "pic_dir": "pic_nat.png"
+  "pic_dir": "pic_nat.png",
+  "store_y_path": "pred.npy"
 }

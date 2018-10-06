@@ -18,7 +18,7 @@ import numpy as np
 
 from model import Model
 
-def run_attack(checkpoint, x_adv, epsilon):
+def run_attack(checkpoint, x_adv, epsilon,pred_path):
   mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
 
   model = Model()
@@ -65,7 +65,7 @@ def run_attack(checkpoint, x_adv, epsilon):
 
   print('Accuracy: {:.2f}%'.format(100.0 * accuracy))
   y_pred = np.concatenate(y_pred, axis=0)
-  np.save('pred.npy', y_pred)
+  np.save(pred_path, y_pred)
   print('Output saved at pred.npy')
 
 if __name__ == '__main__':
@@ -75,6 +75,7 @@ if __name__ == '__main__':
     config = json.load(config_file)
 
   model_dir = config['model_dir']
+  pred_path = config["store_y_path"]
 
   checkpoint = tf.train.latest_checkpoint(model_dir)
   x_adv = np.load(config['store_adv_path'])
@@ -90,4 +91,4 @@ if __name__ == '__main__':
                                                               np.amin(x_adv),
                                                               np.amax(x_adv)))
   else:
-    run_attack(checkpoint, x_adv, config['epsilon'])
+    run_attack(checkpoint, x_adv, config['epsilon'],pred_path)
