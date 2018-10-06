@@ -1,17 +1,15 @@
 # coding='utf-8'
 import matplotlib
 matplotlib.use('Agg')
-
 from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 
 from sklearn import datasets
-# from sklearn.manifold import TSNE
+from sklearn.manifold import TSNE
 
 from tensorflow.examples.tutorials.mnist import input_data
 
-from tsnecuda import TSNE
 
 
 def get_data(x,y):
