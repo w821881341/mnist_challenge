@@ -19,12 +19,12 @@ def get_data(x,y):
     return data, label, n_samples, n_features
 
 
-def plot_embedding(data, label, title):
+def plot_embedding(data, label, label_true, title):
     x_min, x_max = np.min(data, 0), np.max(data, 0)
     data = (data - x_min) / (x_max - x_min)
 
-    fig = plt.figure()
-    ax = plt.subplot(111)
+    fig = plt.figure(figsize=(18, 5))
+    ax1 = plt.subplot(131)
     for i in range(data.shape[0]):
         plt.text(data[i, 0], data[i, 1], str(label[i]),
                  color=plt.cm.Set1(label[i] / 10.),
@@ -32,18 +32,33 @@ def plot_embedding(data, label, title):
     plt.xticks([])
     plt.yticks([])
     plt.title(title)
+    ax2 = plt.subplot(132)
+    for i in range(data.shape[0]):
+        plt.text(data[i, 0], data[i, 1], str(label[i]),
+                 color=plt.cm.Set1(0.9) if label[i] == label_true[i] else plt.cm.Set1(0),
+                 fontdict={'weight': 'bold', 'size': 9})
+    plt.xticks([])
+    plt.yticks([])
+
+    ax2 = plt.subplot(133)
+    for i in range(data.shape[0]):
+        plt.text(data[i, 0], data[i, 1], str(label_true[i]),
+                 color=plt.cm.Set1(0.9) if label[i] == label_true[i] else plt.cm.Set1(0),
+                 fontdict={'weight': 'bold', 'size': 9})
+    plt.xticks([])
+    plt.yticks([])
     # plt.show()
     plt.savefig(config['pic_dir'])
 
 
-def main(x,y):
+def main(x,y_pred,y_true):
 
-    data, label, n_samples, n_features = get_data(x,y)
+    data, label, n_samples, n_features = get_data(x,y_pred)
     print('Computing t-SNE embedding')
     tsne = TSNE(n_components=2, init='pca', random_state=0)
     t0 = time()
     result = tsne.fit_transform(data)
-    plot_embedding(result, label,
+    plot_embedding(result, label, y_true,
                          't-SNE embedding of the digits (time %.2fs)'
                          % (time() - t0))
 
@@ -59,7 +74,8 @@ if __name__ == '__main__':
     x_adv = np.load(config['store_adv_path'])
     mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
     x_nat = mnist.test.images[:10000]
-    y = np.load(config['store_y_path'])
+    y_pred = np.load(config['store_y_path'])
+    y_true = mnist.test.labels[:10000]
 
 
-    main(x_adv,y)
+    main(x_adv,y_pred,y_true)

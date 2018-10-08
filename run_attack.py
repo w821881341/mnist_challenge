@@ -66,7 +66,7 @@ def run_attack(checkpoint, x_adv, epsilon,pred_path):
   print('Accuracy: {:.2f}%'.format(100.0 * accuracy))
   y_pred = np.concatenate(y_pred, axis=0)
   np.save(pred_path, y_pred)
-  print('Output saved at pred.npy')
+  print('Output saved at %s'%pred_path)
 
 if __name__ == '__main__':
   import json

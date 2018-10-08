@@ -1,6 +1,6 @@
 {
   "_comment": "===== MODEL CONFIGURATION =====",
-  "model_dir": "models/a_very_robust_model",
+  "model_dir": "models/natural",
 
   "_comment": "===== TRAINING CONFIGURATION =====",
   "random_seed": 4557077,
@@ -21,7 +21,7 @@
   "a": 0.01,
   "random_start": true,
   "loss_func": "xent",
-  "store_adv_path": "attack.npy",
-  "pic_dir": "pic_nat.png",
-  "store_y_path": "pred.npy"
+  "store_adv_path": "examples/all_attack.npy",
+  "pic_dir": "pics/adv_nat.png",
+  "store_y_path": "preds/adv_nat.npy"
 }
