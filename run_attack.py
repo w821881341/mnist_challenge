@@ -50,7 +50,7 @@ def run_attack(checkpoint, x_adv, epsilon,pred_path):
       bstart = ibatch * eval_batch_size
       bend = min(bstart + eval_batch_size, num_eval_examples)
 
-      x_batch = x_adv[bstart:bend, :]
+      x_batch = x_nat[bstart:bend, :]
       y_batch = mnist.test.labels[bstart:bend]
 
       dict_adv = {model.x_input: x_batch,

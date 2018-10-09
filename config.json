@@ -1,6 +1,6 @@
 {
   "_comment": "===== MODEL CONFIGURATION =====",
-  "model_dir": "models/natural",
+  "model_dir": "models/random_30",
 
   "_comment": "===== TRAINING CONFIGURATION =====",
   "random_seed": 4557077,
@@ -21,7 +21,17 @@
   "a": 0.01,
   "random_start": true,
   "loss_func": "xent",
-  "store_adv_path": "examples/all_attack.npy",
-  "pic_dir": "pics/adv_nat.png",
-  "store_y_path": "preds/adv_nat.npy"
+  "store_adv_path": "examples/random_attack.npy",
+  "pic_dir": "pics/no_eval.png",
+
+
+  "store_y_path":"preds/no_random_30.npy",
+
+
+  "label_nat": "preds/no_nat.npy",
+  "label_adv":"preds/no_adv.npy",
+  "label_mix":"preds/no_mix.npy",
+  "label_random":"preds/no_random.npy",
+  "label_random_10":"preds/no_random_10.npy",
+  "label_random_30":"preds/no_random_30.npy"
 }
