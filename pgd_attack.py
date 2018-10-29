@@ -6,6 +6,7 @@ the examples in an .npy file.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from sklearn.preprocessing import MinMaxScaler
 
 import tensorflow as tf
 import numpy as np
@@ -47,11 +48,20 @@ class LinfPGDAttack:
     else:
       x = np.copy(x_nat)
 
+    pre_softmax = sess.run(self.model.pre_softmax, feed_dict={self.model.x_input: x,
+                                   self.model.y_input: y})
+    bool = np.full((50, 10), False)
+    bool[np.arange(50), y] = True
+    pre_ground_true = pre_softmax[bool]
+
+    weight = np.round((pre_ground_true - np.min(pre_ground_true))/np.ptp(pre_ground_true),decimals=2)
+
     for i in range(self.k):
       grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
                                             self.model.y_input: y})
-
-      x += self.a * np.sign(grad)
+      perturb = self.a * np.sign(grad)
+      perturb_weight = perturb * weight
+      x += perturb_weight
 
       x = np.clip(x, x_nat - self.epsilon, x_nat + self.epsilon) 
       x = np.clip(x, 0, 1) # ensure valid pixel range
