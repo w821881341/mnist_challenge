@@ -50,14 +50,16 @@ class LinfPGDAttack:
 
     pre_softmax = sess.run(self.model.pre_softmax, feed_dict={self.model.x_input: x,
                                    self.model.y_input: y})
-    bool = np.full((50, 10), False)
-    bool[np.arange(50), y] = True
+    line,dimension = np.shape(x_nat)
+    bool = np.full((line, 10), False)
+    bool[np.arange(line), y] = True
     pre_ground_true = pre_softmax[bool]
-    pre_ground_true.shape = (1,50)
+    pre_ground_true.shape = (1,line)
     pre_ground_true = np.transpose(pre_ground_true)
-
-    weight = np.tile((pre_ground_true - np.min(pre_ground_true))/np.ptp(pre_ground_true),(1,784))
-
+    zscore = (pre_ground_true - np.mean(pre_ground_true))/np.std(pre_ground_true)
+    weight = zscore/np.max(np.abs(zscore))+1
+    weight = np.tile(weight,(1,dimension))
+    # weight = np.tile((pre_ground_true - np.min(pre_ground_true))/np.ptp(pre_ground_true),(1,784))
     for i in range(self.k):
       grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
                                             self.model.y_input: y})
@@ -67,6 +69,7 @@ class LinfPGDAttack:
       x = np.clip(x, 0, 1) # ensure valid pixel range
 
     return x
+
 
 
 if __name__ == '__main__':
