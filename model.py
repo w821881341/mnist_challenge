@@ -12,6 +12,7 @@ class Model(object):
   def __init__(self):
     self.x_input = tf.placeholder(tf.float32, shape = [None, 784])
     self.y_input = tf.placeholder(tf.int64, shape = [None])
+    self.weight = tf.placeholder(tf.float32, shape = [None])
 
     self.x_image = tf.reshape(self.x_input, [-1, 28, 28, 1])
 
@@ -45,6 +46,7 @@ class Model(object):
     self.y_xent = tf.nn.sparse_softmax_cross_entropy_with_logits(
         labels=self.y_input, logits=self.pre_softmax)
 
+    self.y_xent *= self.weight
     self.xent = tf.reduce_sum(self.y_xent)
 
     self.y_pred = tf.argmax(self.pre_softmax, 1)

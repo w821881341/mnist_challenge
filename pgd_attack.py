@@ -48,27 +48,37 @@ class LinfPGDAttack:
     else:
       x = np.copy(x_nat)
 
-    pre_softmax = sess.run(self.model.pre_softmax, feed_dict={self.model.x_input: x,
-                                   self.model.y_input: y})
+    # pre_softmax = sess.run(self.model.pre_softmax, feed_dict={self.model.x_input: x,
+    #                                self.model.y_input: y})
     line,dimension = np.shape(x_nat)
-    bool = np.full((line, 10), False)
-    bool[np.arange(line), y] = True
-    pre_ground_true = pre_softmax[bool]
-    pre_ground_true.shape = (1,line)
-    pre_ground_true = np.transpose(pre_ground_true)
-    zscore = (pre_ground_true - np.mean(pre_ground_true))/np.std(pre_ground_true)
-    weight = zscore/np.max(np.abs(zscore))+1
-    weight = np.tile(weight,(1,dimension))
+    # bool = np.full((line, 10), False)
+    # bool[np.arange(line), y] = True
+    # pre_ground_true = pre_softmax[bool]
+    # pre_ground_true.shape = (1,line)
+    # pre_ground_true = np.transpose(pre_ground_true)
+    # zscore = (pre_ground_true - np.mean(pre_ground_true))/np.std(pre_ground_true)
+    # weight = zscore/np.max(np.abs(zscore))+1
+    # weight = np.tile(weight,(1,dimension))
     # weight = np.tile((pre_ground_true - np.min(pre_ground_true))/np.ptp(pre_ground_true),(1,784))
     for i in range(self.k):
-      grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
-                                            self.model.y_input: y})
-      x += self.a * np.sign(grad)*weight
+      dict = {self.model.x_input: x,
+              self.model.y_input: y,
+              self.model.weight: np.ones(line)}
+      grad = sess.run(self.grad, feed_dict=dict)
+      x += self.a * np.sign(grad)
 
       x = np.clip(x, x_nat - self.epsilon, x_nat + self.epsilon) 
       x = np.clip(x, 0, 1) # ensure valid pixel range
 
-    return x
+    adv_dict = {self.model.x_input: x,
+            self.model.y_input: y,
+            self.model.weight: np.ones(line)}
+    y_xent = sess.run(self.model.y_xent, feed_dict=adv_dict)
+
+    zscore = (y_xent - np.mean(y_xent))/np.std(y_xent)
+    weight = zscore/np.max(np.abs(zscore))+ 1 + 1e-4
+
+    return x,weight
 
 
 
