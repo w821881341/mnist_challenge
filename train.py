@@ -81,19 +81,18 @@ with tf.Session() as sess:
     # Compute Adversarial Perturbations
     start = timer()
     x_batch_adv,weight = attack.perturb(x_batch, y_batch, sess)
-    weight_origin = np.ones_like(weight)
+    # weight_origin = np.ones_like(weight)
 
     end = timer()
     training_time += end - start
 
     nat_dict = {model.x_input: x_batch,
                 model.y_input: y_batch,
-                model.weight: weight_origin}
+                model.weight: weight}
 
     adv_dict = {model.x_input: x_batch_adv,
                 model.y_input: y_batch,
-                model.weight: weight_origin}
-
+                model.weight: weight}
 
     # Output to stdout
     if ii % num_output_steps == 0:
@@ -117,7 +116,6 @@ with tf.Session() as sess:
       saver.save(sess,
                  os.path.join(model_dir, 'checkpoint'),
                  global_step=global_step)
-    adv_dict[model.weight] = weight
 
     # Actual training step
     start = timer()

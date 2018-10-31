@@ -61,10 +61,9 @@ class LinfPGDAttack:
     # weight = np.tile(weight,(1,dimension))
     # weight = np.tile((pre_ground_true - np.min(pre_ground_true))/np.ptp(pre_ground_true),(1,784))
     for i in range(self.k):
-      dict = {self.model.x_input: x,
-              self.model.y_input: y,
-              self.model.weight: np.ones(line)}
-      grad = sess.run(self.grad, feed_dict=dict)
+      grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
+                                              self.model.y_input: y,
+                                              self.model.weight: np.ones(line)})
       x += self.a * np.sign(grad)
 
       x = np.clip(x, x_nat - self.epsilon, x_nat + self.epsilon) 
@@ -131,7 +130,7 @@ if __name__ == '__main__':
       x_batch = mnist.test.images[bstart:bend, :]
       y_batch = mnist.test.labels[bstart:bend]
 
-      x_batch_adv = attack.perturb(x_batch, y_batch, sess)
+      x_batch_adv,weight = attack.perturb(x_batch, y_batch, sess)
 
       x_adv.append(x_batch_adv)
 
