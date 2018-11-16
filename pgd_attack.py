@@ -42,22 +42,89 @@ class LinfPGDAttack:
   def perturb(self, x_nat, y, sess):
     """Given a set of examples (x_nat, y), returns a set of adversarial
        examples within epsilon of x_nat in l_infinity norm."""
+    # if self.rand:
+    #   x = x_nat + np.random.uniform(-self.epsilon, self.epsilon, x_nat.shape)
+    # else:
+    x = np.copy(x_nat)
+    grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
+                                          self.model.y_input: y})
+
+    x += self.epsilon * np.sign(grad)
+    x = np.clip(x, x_nat - self.epsilon, x_nat + self.epsilon)
+    x = np.clip(x, 0, 1)  # ensure valid pixel range
+    # for i in range(self.k):
+    #   grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
+    #                                         self.model.y_input: y})
+    #
+    #   x += self.a * np.sign(grad)
+    #
+    #   x = np.clip(x, x_nat - self.epsilon, x_nat + self.epsilon)
+    #   x = np.clip(x, 0, 1) # ensure valid pixel range
+
+    return x
+
+  def all_perturb(self, x_nat,y,sess):
+    """Given a set of examples (x_nat, y), returns a set of adversarial
+       examples within epsilon of x_nat in l_infinity norm."""
     if self.rand:
       x = x_nat + np.random.uniform(-self.epsilon, self.epsilon, x_nat.shape)
     else:
       x = np.copy(x_nat)
 
-    for i in range(self.k):
+    for i in range(10):
+      y_i = np.full_like(y,i)
       grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
-                                            self.model.y_input: y})
+                                            self.model.y_input: y_i})
 
-      x += self.a * np.sign(grad)
+      x -= self.epsilon * np.sign(grad)
 
-      x = np.clip(x, x_nat - self.epsilon, x_nat + self.epsilon) 
+      x = np.clip(x, x_nat - self.epsilon, x_nat + self.epsilon)
       x = np.clip(x, 0, 1) # ensure valid pixel range
 
     return x
 
+
+  def avg_perturb(self, x_nat,y,sess):
+    """Given a set of examples (x_nat, y), returns a set of adversarial
+       examples within epsilon of x_nat in l_infinity norm."""
+    if self.rand:
+      x = x_nat + np.random.uniform(-self.epsilon, self.epsilon, x_nat.shape)
+    else:
+      x = np.copy(x_nat)
+
+    grad_all = np.full_like(x_nat,0)
+    for i in range(10):
+      y_i = np.full_like(y, i)
+      grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
+                                            self.model.y_input: y_i})
+      grad_all += grad
+
+    x -= self.epsilon * np.sign(grad_all)
+
+    x = np.clip(x, x_nat - self.epsilon, x_nat + self.epsilon)
+    x = np.clip(x, 0, 1) # ensure valid pixel range
+
+    return x
+
+
+  def get_normalized_vector(d):
+    d /= (1e-12 + tf.reduce_max(tf.abs(d), range(1, len(d.get_shape())), keep_dims=True))
+    d /= tf.sqrt(1e-6 + tf.reduce_sum(tf.pow(d, 2.0), range(1, len(d.get_shape())), keep_dims=True))
+    return d
+
+  def generate_virtual_adversarial_perturbation(self,x, sess):
+    d = tf.random_normal(shape=tf.shape(x))
+
+    for _ in range(1):
+      d = 1e-6 * self.get_normalized_vector(d)
+      pre_softmax = sess.run(model.pre_softmax, feed_dict=dict_adv)
+      logit_p = logit
+      logit_m = forward(x + d, update_batch_stats=False, is_training=is_training)
+      dist = L.kl_divergence_with_logit(logit_p, logit_m)
+      grad = tf.gradients(dist, [d], aggregation_method=2)[0]
+      d = tf.stop_gradient(grad)
+
+    return FLAGS.epsilon * get_normalized_vector(d)
 
 if __name__ == '__main__':
   import json

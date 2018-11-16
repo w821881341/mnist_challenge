@@ -10,6 +10,7 @@ import math
 import os
 import sys
 import time
+from pgd_attack import LinfPGDAttack
 
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
@@ -33,7 +34,13 @@ def run_attack(checkpoint, x_adv, epsilon):
 
   x_nat = mnist.test.images
   l_inf = np.amax(np.abs(x_nat - x_adv))
-  
+  attack = LinfPGDAttack(model,
+                         config['epsilon'],
+                         config['k'],
+                         config['a'],
+                         config['random_start'],
+                         config['loss_func'])
+
   if l_inf > epsilon + 0.0001:
     print('maximum perturbation found: {}'.format(l_inf))
     print('maximum perturbation allowed: {}'.format(epsilon))
@@ -50,10 +57,11 @@ def run_attack(checkpoint, x_adv, epsilon):
       bstart = ibatch * eval_batch_size
       bend = min(bstart + eval_batch_size, num_eval_examples)
 
-      x_batch = x_adv[bstart:bend, :]
+      x_batch = x_nat[bstart:bend, :]
       y_batch = mnist.test.labels[bstart:bend]
+      x_batch_adv = attack.all_perturb(x_batch,y_batch, sess)
 
-      dict_adv = {model.x_input: x_batch,
+      dict_adv = {model.x_input: x_batch_adv,
                   model.y_input: y_batch}
       cur_corr, y_pred_batch = sess.run([model.num_correct, model.y_pred],
                                         feed_dict=dict_adv)
