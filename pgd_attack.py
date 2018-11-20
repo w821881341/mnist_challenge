@@ -42,24 +42,19 @@ class LinfPGDAttack:
   def perturb(self, x_nat, y, sess):
     """Given a set of examples (x_nat, y), returns a set of adversarial
        examples within epsilon of x_nat in l_infinity norm."""
-    # if self.rand:
-    #   x = x_nat + np.random.uniform(-self.epsilon, self.epsilon, x_nat.shape)
-    # else:
-    x = np.copy(x_nat)
-    grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
-                                          self.model.y_input: y})
+    if self.rand:
+      x = x_nat + np.random.uniform(-self.epsilon, self.epsilon, x_nat.shape)
+    else:
+      x = np.copy(x_nat)
 
-    x += self.epsilon * np.sign(grad)
-    x = np.clip(x, x_nat - self.epsilon, x_nat + self.epsilon)
-    x = np.clip(x, 0, 1)  # ensure valid pixel range
-    # for i in range(self.k):
-    #   grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
-    #                                         self.model.y_input: y})
-    #
-    #   x += self.a * np.sign(grad)
-    #
-    #   x = np.clip(x, x_nat - self.epsilon, x_nat + self.epsilon)
-    #   x = np.clip(x, 0, 1) # ensure valid pixel range
+    for i in range(self.k):
+      grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
+                                            self.model.y_input: y})
+
+      x += self.a * np.sign(grad)
+
+      x = np.clip(x, x_nat - self.epsilon, x_nat + self.epsilon)
+      x = np.clip(x, 0, 1) # ensure valid pixel range
 
     return x
 

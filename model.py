@@ -22,7 +22,7 @@ class Model(object):
             dist = self.kl_divergence_with_logit(self.pre_softmax, self.pre_softmax_adv)
             grad = tf.gradients(dist, [d], aggregation_method=2)[0]
             d = tf.stop_gradient(grad)
-        self.x_adv = self.x_input + 0.3 * self.get_normalized_vector(d)
+        self.x_adv = self.x_input - 0.3 * self.get_normalized_vector(d)
 
         self.y_input = tf.placeholder(tf.int64, shape = [None])
 
