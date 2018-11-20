@@ -112,14 +112,14 @@ class Model(object):
 
 
   def logsoftmax(self,x):
-    xdev = x - tf.reduce_max(x, 1, keepdims=True)
-    lsm = xdev - tf.log(tf.reduce_sum(tf.exp(xdev), 1, keepdims=True))
+    xdev = x - tf.reduce_max(x, 1, keep_dims=True)
+    lsm = xdev - tf.log(tf.reduce_sum(tf.exp(xdev), 1, keep_dims=True))
     return lsm
 
   def get_normalized_vector(self,d):
     # print(range(1, len(d.get_shape())))
-    d /= (1e-12 + tf.reduce_max(tf.abs(d), 1, keepdims=True))
-    d /= tf.sqrt(1e-6 + tf.reduce_sum(tf.pow(d, 2.0),1, keepdims=True))
+    d /= (1e-12 + tf.reduce_max(tf.abs(d), 1, keep_dims=True))
+    d /= tf.sqrt(1e-6 + tf.reduce_sum(tf.pow(d, 2.0),1, keep_dims=True))
     return d
 
   def kl_divergence_with_logit(self,q_logit, p_logit):
