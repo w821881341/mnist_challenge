@@ -11,9 +11,37 @@ import tensorflow as tf
 class Model(object):
   def __init__(self):
     self.x_input = tf.placeholder(tf.float32, shape = [None, 784])
-    self.y_input = tf.placeholder(tf.int64, shape = [None])
+    with tf.variable_scope("") as scope:
+        self.pre_softmax = self.build(self.x_input)
+        scope.reuse_variables()
+        d = tf.random_normal(shape=tf.shape(self.x_input))
+        for _ in range(1):
+            d = 1e-6 * self.get_normalized_vector(d)
+            self.pre_softmax = self.build(self.x_input)
+            self.pre_softmax_adv = self.build(self.x_input + d)
+            dist = self.kl_divergence_with_logit(self.pre_softmax, self.pre_softmax_adv)
+            grad = tf.gradients(dist, [d], aggregation_method=2)[0]
+            d = tf.stop_gradient(grad)
+        self.x_adv = self.x_input + 0.3 * self.get_normalized_vector(d)
 
-    self.x_image = tf.reshape(self.x_input, [-1, 28, 28, 1])
+        self.y_input = tf.placeholder(tf.int64, shape = [None])
+
+        y_xent = tf.nn.sparse_softmax_cross_entropy_with_logits(
+            labels=self.y_input, logits=self.pre_softmax)
+
+        self.xent = tf.reduce_sum(y_xent)
+
+        self.y_pred = tf.argmax(self.pre_softmax, 1)
+
+        correct_prediction = tf.equal(self.y_pred, self.y_input)
+
+        self.num_correct = tf.reduce_sum(tf.cast(correct_prediction, tf.int64))
+        self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+
+  def build(self,x):
+
+    self.x_image = tf.reshape(x, [-1, 28, 28, 1])
 
     # first convolutional layer
     W_conv1 = self._weight_variable([5,5,1,32])
@@ -40,19 +68,10 @@ class Model(object):
     W_fc2 = self._weight_variable([1024,10])
     b_fc2 = self._bias_variable([10])
 
-    self.pre_softmax = tf.matmul(h_fc1, W_fc2) + b_fc2
+    return tf.matmul(h_fc1, W_fc2) + b_fc2
 
-    y_xent = tf.nn.sparse_softmax_cross_entropy_with_logits(
-        labels=self.y_input, logits=self.pre_softmax)
 
-    self.xent = tf.reduce_sum(y_xent)
 
-    self.y_pred = tf.argmax(self.pre_softmax, 1)
-
-    correct_prediction = tf.equal(self.y_pred, self.y_input)
-
-    self.num_correct = tf.reduce_sum(tf.cast(correct_prediction, tf.int64))
-    self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
   @staticmethod
   def _weight_variable(shape):
@@ -74,3 +93,56 @@ class Model(object):
                             ksize = [1,2,2,1],
                             strides=[1,2,2,1],
                             padding='SAME')
+
+  #
+  # def gen_virtual_gradient(self):
+  #   # self.x_input = tf.placeholder(tf.float32, shape = [None, 784])
+  #   self.build_model = self.build
+  #   d = tf.random_normal(shape=tf.shape(self.x_input))
+  #   d_ = None
+  #   for _ in range(1):
+  #     d = 1e-6 * self.get_normalized_vector(d)
+  #     self.pre_softmax = self.build(self.x_input)
+  #     self.pre_softmax_adv = self.build(self.x_input+d)
+  #     dist = self.kl_divergence_with_logit(self.pre_softmax, self.pre_softmax_adv)
+  #     grad = tf.gradients(dist, [d], aggregation_method=2)[0]
+  #     d_ = tf.stop_gradient(grad)
+  #   asdf = self.x_input + 0.3 * self.get_normalized_vector(d_)
+  #   return asdf
+
+
+  def logsoftmax(self,x):
+    xdev = x - tf.reduce_max(x, 1, keepdims=True)
+    lsm = xdev - tf.log(tf.reduce_sum(tf.exp(xdev), 1, keepdims=True))
+    return lsm
+
+  def get_normalized_vector(self,d):
+    # print(range(1, len(d.get_shape())))
+    d /= (1e-12 + tf.reduce_max(tf.abs(d), 1, keepdims=True))
+    d /= tf.sqrt(1e-6 + tf.reduce_sum(tf.pow(d, 2.0),1, keepdims=True))
+    return d
+
+  def kl_divergence_with_logit(self,q_logit, p_logit):
+    q = tf.nn.softmax(q_logit)
+    qlogq = tf.reduce_mean(tf.reduce_sum(q * self.logsoftmax(q_logit), 1))
+    qlogp = tf.reduce_mean(tf.reduce_sum(q * self.logsoftmax(p_logit), 1))
+    return qlogq - qlogp
+  # def eval(self):
+  #   self.x_input = tf.placeholder(tf.float32, shape = [None, 784])
+  #
+  #
+  #   self.pre_softmax = self.build(self.x_input)
+  #
+  #   self.y_input = tf.placeholder(tf.int64, shape = [None])
+  #
+  #   y_xent = tf.nn.sparse_softmax_cross_entropy_with_logits(
+  #       labels=self.y_input, logits=self.pre_softmax)
+  #
+  #   self.xent = tf.reduce_sum(y_xent)
+  #
+  #   self.y_pred = tf.argmax(self.pre_softmax, 1)
+  #
+  #   correct_prediction = tf.equal(self.y_pred, self.y_input)
+  #
+  #   self.num_correct = tf.reduce_sum(tf.cast(correct_prediction, tf.int64))
+  #   self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))

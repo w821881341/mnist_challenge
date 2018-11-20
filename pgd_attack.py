@@ -106,25 +106,27 @@ class LinfPGDAttack:
 
     return x
 
+  def logsoftmax(self,x):
+    xdev = x - tf.reduce_max(x, 1, keepdims=True)
+    lsm = xdev - tf.log(tf.reduce_sum(tf.exp(xdev), 1, keepdims=True))
+    return lsm
 
-  def get_normalized_vector(d):
-    d /= (1e-12 + tf.reduce_max(tf.abs(d), range(1, len(d.get_shape())), keep_dims=True))
-    d /= tf.sqrt(1e-6 + tf.reduce_sum(tf.pow(d, 2.0), range(1, len(d.get_shape())), keep_dims=True))
+  def get_normalized_vector(self,d):
+    # print(range(1, len(d.get_shape())))
+    d /= (1e-12 + tf.reduce_max(tf.abs(d), 1, keepdims=True))
+    d /= tf.sqrt(1e-6 + tf.reduce_sum(tf.pow(d, 2.0),1, keepdims=True))
     return d
 
+  def kl_divergence_with_logit(self,q_logit, p_logit):
+    q = tf.nn.softmax(q_logit)
+    qlogq = tf.reduce_mean(tf.reduce_sum(q * self.logsoftmax(q_logit), 1))
+    qlogp = tf.reduce_mean(tf.reduce_sum(q * self.logsoftmax(p_logit), 1))
+    return qlogq - qlogp
+
   def generate_virtual_adversarial_perturbation(self,x, sess):
-    d = tf.random_normal(shape=tf.shape(x))
+    x_adv = sess.run(self.model.gen_virtual_gradient(), feed_dict={self.model.x_input:x })
 
-    for _ in range(1):
-      d = 1e-6 * self.get_normalized_vector(d)
-      pre_softmax = sess.run(model.pre_softmax, feed_dict=dict_adv)
-      logit_p = logit
-      logit_m = forward(x + d, update_batch_stats=False, is_training=is_training)
-      dist = L.kl_divergence_with_logit(logit_p, logit_m)
-      grad = tf.gradients(dist, [d], aggregation_method=2)[0]
-      d = tf.stop_gradient(grad)
-
-    return FLAGS.epsilon * get_normalized_vector(d)
+    return x_adv
 
 if __name__ == '__main__':
   import json

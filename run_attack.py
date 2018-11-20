@@ -23,7 +23,8 @@ def run_attack(checkpoint, x_adv, epsilon):
   mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
 
   model = Model()
-
+  scope = tf.get_variable_scope()
+  scope.reuse_variables()
   saver = tf.train.Saver()
 
   num_eval_examples = 10000
@@ -34,12 +35,12 @@ def run_attack(checkpoint, x_adv, epsilon):
 
   x_nat = mnist.test.images
   l_inf = np.amax(np.abs(x_nat - x_adv))
-  attack = LinfPGDAttack(model,
-                         config['epsilon'],
-                         config['k'],
-                         config['a'],
-                         config['random_start'],
-                         config['loss_func'])
+  # attack = LinfPGDAttack(model,
+  #                        config['epsilon'],
+  #                        config['k'],
+  #                        config['a'],
+  #                        config['random_start'],
+  #                        config['loss_func'])
 
   if l_inf > epsilon + 0.0001:
     print('maximum perturbation found: {}'.format(l_inf))
@@ -57,15 +58,15 @@ def run_attack(checkpoint, x_adv, epsilon):
       bstart = ibatch * eval_batch_size
       bend = min(bstart + eval_batch_size, num_eval_examples)
 
-      x_batch = x_nat[bstart:bend, :]
+      x_batch = x_adv[bstart:bend, :]
       y_batch = mnist.test.labels[bstart:bend]
-      x_batch_adv = attack.all_perturb(x_batch,y_batch, sess)
-
+      x_batch_adv = sess.run(model.x_adv,feed_dict={model.x_input: x_batch,model.y_input: y_batch})
+      np.save('adv_vir.npy', x_batch_adv)
       dict_adv = {model.x_input: x_batch_adv,
                   model.y_input: y_batch}
       cur_corr, y_pred_batch = sess.run([model.num_correct, model.y_pred],
                                         feed_dict=dict_adv)
-
+      print(ibatch)
       total_corr += cur_corr
       y_pred.append(y_pred_batch)
 
